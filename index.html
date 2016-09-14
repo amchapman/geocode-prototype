@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://maps.googleapis.com/maps/api/js"></script>
+    <script>
+
+      var map;
+      var allMarkers = [];
+      var origin;
+      var originMarker;
+
+      function drawMap() {
+        disableButtons(true);
+        var address = document.getElementById('address').value;
+        if (address == "") {
+          alert("Enter a valid address");
+          disableButtons(false);
+          return false;
+        }
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode({
+          'address': address
+        }, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK) {
+            if (!map) {
+              var mapCanvas = document.getElementById('map');
+              var mapOptions = {
+                center: results[0].geometry.location,
+                zoom: 18,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+              };
+              map = new google.maps.Map(mapCanvas, mapOptions);
+            } else {
+              map.setCenter(results[0].geometry.location);
+            }
+            origin = {lat: results[0].geometry.location.lat(), lng: results[0].geometry.location.lng()};
+            originMarker = new google.maps.Marker({
+              position: results[0].geometry.location,
+              map: map,
+              title: address + ' [' + origin.lat + ',' + origin.lng + ']'
+            });
+            log('<p>Sent: ' + address + '</p><p>Rcvd: ' + origin.lat + ',' + origin.lng + '</p>');
+            allMarkers.push(originMarker);
+            disableButtons(false);
+          } else {
+            alert('Google did not recognize the address you entered [' + status + ']');
+            disableButtons(false);
+          }
+        });
+        return false;
+      }
+
+      function disableButtons(bool) {
+        document.getElementById('draw-map').disabled=bool;
+        document.getElementById('clear-map').disabled=bool;
+      }
+
+      function clearMap() {
+        document.getElementById("log").innerHTML = '';
+        for (i=0; i<allMarkers.length; i++) {
+          allMarkers[i].setMap(null);
+        }
+        allMarkers = [];
+        return false;
+      }
+
+      function log(s) {
+        document.getElementById("log").innerHTML += s;
+      }
+
+    </script>
+    <style>
+      * {
+        padding: 0;
+        margin: 0
+      }
+      html, body {
+        height: 100%;
+        width: 100%;
+      }
+      #sideBar {
+        height: 100%;
+        width: 300px;
+        float: left;
+        padding: 5px;
+      }
+      #map {
+        height: 100%;
+        margin-left: 310px;
+        padding: 5px;
+      }
+      hr {
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      input,select {
+        font-size: 13px;
+        font-family: Verdana, Sans-serif;
+        width: 100%;
+      }
+      p {
+        margin-top: 10px;
+        margin-bottom: 2px;
+        font-size: 13px;
+        font-family: Verdana, Sans-serif;
+      }
+      input[type="submit"]:disabled {
+        background-color: grey;
+      }
+      input[type="submit"] {
+        margin-top: 3px;
+        background-color: blue;
+        color: white;
+        -moz-border-radius: 18px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sideBar">
+    <form>
+      <input type="text" id="address" placeholder="e.g. Beech Mountain, NC" autofocus/>
+      <input type="submit" id="draw-map" onclick="return drawMap();" value="Draw Map"/>
+      <input type="submit" id="clear-map" onclick="return clearMap();" value="Clear Map"/>
+    </form>
+    <div id="log"></div>
+    </div>
+    <div id="map"></div>
+  </body>
+</html>
